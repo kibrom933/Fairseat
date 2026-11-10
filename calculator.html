@@ -1,0 +1,12 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AI tool cost calculator · Fairseat</title><meta name="description" content="Calculate the true yearly cost of your AI tools per seat."><link rel="stylesheet" href="/style.css"></head><body><header><div class="wrap"><nav><a class="logo" href="/">Fair<span>seat</span></a><a href="/calculator.html">Cost calculator</a><a href="/ai-act.html">AI Act guide</a><a href="/about.html">About</a></nav></div></header><main class="wrap">
+<h1>AI tool cost calculator</h1><p>Add the tools you pay for. Prices are what you enter; nothing is sent anywhere.</p>
+<div id="rows"></div><button onclick="add()">+ Add tool</button>
+<div class="grid" style="margin-top:20px"><div class="card">Per month<div class="big" id="m">0</div></div><div class="card">Per year<div class="big" id="y">0</div></div><div class="card">Saved by paying annually<div class="big" id="s">0</div></div></div>
+<script>
+const R=document.getElementById('rows');
+function add(n='',p='',a='',s=1){const d=document.createElement('div');d.className='card grid';d.innerHTML=`<div><label>Tool</label><input value="${n}"></div><div><label>Monthly price / seat</label><input type="number" min="0" value="${p}"></div><div><label>Annual-plan price / seat / month</label><input type="number" min="0" value="${a}"></div><div><label>Seats</label><input type="number" min="1" value="${s}"></div>`;d.oninput=calc;R.appendChild(d);calc()}
+function calc(){let m=0,sv=0;R.querySelectorAll('.card').forEach(c=>{const v=[...c.querySelectorAll('input')].map(i=>+i.value||0);m+=v[1]*v[3];if(v[2])sv+=(v[1]-v[2])*v[3]*12});
+const f=x=>x.toLocaleString(undefined,{maximumFractionDigits:0});document.getElementById('m').textContent=f(m);document.getElementById('y').textContent=f(m*12);document.getElementById('s').textContent=f(Math.max(sv,0))}
+add('Example tool',20,16,3);
+</script>
+</main><footer class="wrap">Fairseat reviews AI tools from Europe: real prices, privacy, and what the rules mean for your team. Some future links may earn us a commission; we will always label them. <a href="/about.html#disclosure">Disclosure</a></footer></body></html>
