@@ -1,12 +1,61 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AI tool cost calculator · Fairseat</title><meta name="description" content="Calculate the true yearly cost of your AI tools per seat."><link rel="stylesheet" href="/style.css"></head><body><header><div class="wrap"><nav><a class="logo" href="/">Fair<span>seat</span></a><a href="/calculator.html">Cost calculator</a><a href="/ai-act.html">AI Act guide</a><a href="/about.html">About</a></nav></div></header><main class="wrap">
-<h1>AI tool cost calculator</h1><p>Add the tools you pay for. Prices are what you enter; nothing is sent anywhere.</p>
-<div id="rows"></div><button onclick="add()">+ Add tool</button>
-<div class="grid" style="margin-top:20px"><div class="card">Per month<div class="big" id="m">0</div></div><div class="card">Per year<div class="big" id="y">0</div></div><div class="card">Saved by paying annually<div class="big" id="s">0</div></div></div>
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Seat receipt: AI tool cost calculator · Fairseat</title><meta name="description" content="See what your AI subscriptions cost per year, what idle seats cost, and what annual billing saves. Runs in your browser.">
+<link rel="canonical" href="https://fairseat.netlify.app/calculator.html">
+<meta property="og:title" content="Seat receipt: AI tool cost calculator · Fairseat"><meta property="og:description" content="See what your AI subscriptions cost per year, what idle seats cost, and what annual billing saves. Runs in your browser."><meta property="og:type" content="website">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="preload" href="/fonts/serif.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/style.css"></head><body>
+<header><div class="wrap"><nav><a class="logo" href="/">Fair<i>seat</i></a><a href="/calculator.html" aria-current=page>Seat receipt</a><a href="/vendor-check.html">Vendor check</a><a href="/ai-act.html">AI Act</a><a href="/method.html">Method</a><a href="/about.html">About</a></nav></div></header>
+<main class="wrap">
+
+<p class="eyebrow">Tool 01</p>
+<h1>Seat <em>receipt</em></h1>
+<p class="lede">Add the AI tools you pay for. You get the yearly total, the cost of idle seats, and the saving from annual billing. Your numbers stay in this browser.</p>
+<div class="calc">
+<div>
+<div class="bar noprint"><div style="width:120px"><label for="cur">Currency</label><select id="cur"><option>€</option><option>kr</option><option>$</option><option>£</option></select></div></div>
+<div id="rows"></div>
+<div class="bar noprint"><button id="add">Add a tool</button><button class="ghost" id="csv">Download CSV</button><button class="ghost" onclick="print()">Print</button><button class="ghost" id="clear">Clear</button></div>
+<p class="src">Monthly price is the per-seat price on monthly billing. Annual-plan price is the per-seat, per-month price when billed yearly; leave it empty if you do not know it. "Used" is how many seats were actually used in the last 30 days: most admin consoles show it.</p>
+</div>
+<div class="receipt" id="rc" aria-live="polite"></div>
+</div>
+<h2>Reading the receipt</h2>
+<div class="narrow">
+<p><b>Idle seats</b> are licences bought for someone who tried the tool twice and stopped. If the idle line is more than a fifth of the total, drop seats before you negotiate price.</p>
+<p><b>Annual billing</b> usually lowers the per-seat price, but it removes your ability to drop seats mid-year. Take the saving only for tools where the used-seat count has been stable for three months.</p>
+<p><b>What the receipt cannot see:</b> usage-based charges (credits, tokens, minutes), VAT, and price changes at renewal. Check the invoice, not the pricing page.</p>
+</div>
+
+</main>
+<footer><div class="wrap"><span>Fairseat is run independently from Denmark. No cookies, no tracking, no ads.</span>
+<span><a href="/about.html#money">How we make money</a> · <a href="/method.html">How we review</a></span></div></footer>
 <script>
-const R=document.getElementById('rows');
-function add(n='',p='',a='',s=1){const d=document.createElement('div');d.className='card grid';d.innerHTML=`<div><label>Tool</label><input value="${n}"></div><div><label>Monthly price / seat</label><input type="number" min="0" value="${p}"></div><div><label>Annual-plan price / seat / month</label><input type="number" min="0" value="${a}"></div><div><label>Seats</label><input type="number" min="1" value="${s}"></div>`;d.oninput=calc;R.appendChild(d);calc()}
-function calc(){let m=0,sv=0;R.querySelectorAll('.card').forEach(c=>{const v=[...c.querySelectorAll('input')].map(i=>+i.value||0);m+=v[1]*v[3];if(v[2])sv+=(v[1]-v[2])*v[3]*12});
-const f=x=>x.toLocaleString(undefined,{maximumFractionDigits:0});document.getElementById('m').textContent=f(m);document.getElementById('y').textContent=f(m*12);document.getElementById('s').textContent=f(Math.max(sv,0))}
-add('Example tool',20,16,3);
-</script>
-</main><footer class="wrap">Fairseat reviews AI tools from Europe: real prices, privacy, and what the rules mean for your team. Some future links may earn us a commission; we will always label them. <a href="/about.html#disclosure">Disclosure</a></footer></body></html>
+const R=document.getElementById('rows'),K='fairseat.rows.v1';let cur='€';
+const F=['name','month','annual','seats','used'],L=['Tool','Monthly / seat','Annual plan / seat / mo','Seats','Used'];
+function row(d={}){const e=document.createElement('div');e.className='row';
+ F.forEach((f,i)=>{const w=document.createElement('div'),id='f'+Math.random().toString(36).slice(2);
+  w.innerHTML=`<label for="${id}">${L[i]}</label>`;const inp=document.createElement('input');inp.id=id;inp.dataset.f=f;
+  if(i){inp.type='number';inp.min=0;inp.step=i<3?'0.01':'1';inp.inputMode='decimal'}inp.value=d[f]??'';w.appendChild(inp);e.appendChild(w)});
+ const x=document.createElement('button');x.className='x noprint';x.textContent='Remove';x.onclick=()=>{e.remove();calc()};e.appendChild(x);R.appendChild(e)}
+function data(){return [...R.children].map(e=>{const o={};e.querySelectorAll('input').forEach(i=>o[i.dataset.f]=i.dataset.f=='name'?i.value:(i.value===''?null:+i.value));return o})}
+const fm=n=>cur+' '+Math.round(n).toLocaleString('en');
+function calc(){const d=data();let y=0,idle=0,save=0,ts=0,ti=0,html='<h4>Seat receipt</h4><div class="sub">'+new Date().toISOString().slice(0,10)+'</div>';
+ const rr=(a,b,c='')=>`<div class="r ${c}"><span></span><span></span></div>`;const el=document.getElementById('rc');el.innerHTML=html;
+ const add=(a,b,c='')=>{const r=document.createElement('div');r.className='r '+c;const s1=document.createElement('span'),s2=document.createElement('span');s1.textContent=a;s2.textContent=b;r.append(s1,s2);el.appendChild(r)};
+ d.forEach(o=>{const s=o.seats||0,m=o.month||0,u=o.used==null?s:Math.min(o.used,s);if(!s||!m)return;const yr=m*s*12;y+=yr;idle+=m*(s-u)*12;ts+=s;ti+=s-u;
+  if(o.annual&&o.annual<m)save+=(m-o.annual)*s*12;add((o.name||'Unnamed')+' × '+s,fm(yr))});
+ if(!y){add('Add a tool to start','');return}
+ add('Per year',fm(y),'t');add('Per month',fm(y/12));add('Per seat, per year',fm(y/ts));
+ if(ti)add(`Idle seats (${ti} of ${ts})`,fm(idle),'w');if(save)add('If billed annually','− '+fm(save),'s');
+ try{localStorage.setItem(K,JSON.stringify({cur,d}))}catch(e){}}
+R.addEventListener('input',calc);document.getElementById('add').onclick=()=>{row();calc()};
+document.getElementById('cur').onchange=e=>{cur=e.target.value;calc()};
+document.getElementById('clear').onclick=()=>{R.innerHTML='';row();calc()};
+document.getElementById('csv').onclick=()=>{const q=s=>'"'+String(s??'').replace(/"/g,'""')+'"';const t=[F.join(',')].concat(data().map(o=>F.map(f=>q(o[f])).join(','))).join('\n');
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv'}));a.download='seat-receipt.csv';a.click()};
+let saved=null;try{saved=JSON.parse(localStorage.getItem(K))}catch(e){}
+if(saved&&saved.d&&saved.d.length){cur=saved.cur||'€';document.getElementById('cur').value=cur;saved.d.forEach(row)}
+else{[{name:'Example: meeting notes',month:18,annual:15,seats:5,used:3},{name:'Example: writing assistant',month:20,annual:17,seats:5,used:5}].forEach(row)}
+calc();
+</script></body></html>
